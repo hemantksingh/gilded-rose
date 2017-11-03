@@ -1,89 +1,104 @@
+using System;
 using System.Collections.Generic;
 
 namespace gilded_rose
 {
 	public class GildedRose
-    {
-        IList<Item> Items;
-        public GildedRose(IList<Item> Items)
-        {
-            this.Items = Items;
-        }
+	{
+		private static readonly Dictionary<string, IProduct> Products =
+			new Dictionary<string, IProduct>
+			{
+				{"Aged Brie", new Product(new QualityAdjuster(+1))},
+				{"Backstage passes to a TAFKAL80ETC concert",
+					new Product(new BackstageQualityAdjuster(+1))},
+				{"Sulfuras, Hand of Ragnaros", new SulfurasProduct()},
+				{"Default Item", new Product(new QualityAdjuster(-1))}
+			};
 
-        public void UpdateQuality()
-        {
-            for (var i = 0; i < Items.Count; i++)
-            {
-                if (Items[i].Name != "Aged Brie" && Items[i].Name != "Backstage passes to a TAFKAL80ETC concert")
-                {
-                    if (Items[i].Quality > 0)
-                    {
-                        if (Items[i].Name != "Sulfuras, Hand of Ragnaros")
-                        {
-                            Items[i].Quality = Items[i].Quality - 1;
-                        }
-                    }
-                }
-                else
-                {
-                    if (Items[i].Quality < 50)
-                    {
-                        Items[i].Quality = Items[i].Quality + 1;
+		public void UpdateQuality(List<Item> items)
+		{
+			foreach (Item item in items)
+			{
+				if (Products.TryGetValue(item.Name, out IProduct product))
+					product.Update(item);
+				else {
+					var defaultProduct = Products.GetValueOrDefault("Default Item");
+					defaultProduct.Update(item);
+				}
+			}
+		}
+	}
 
-                        if (Items[i].Name == "Backstage passes to a TAFKAL80ETC concert")
-                        {
-                            if (Items[i].SellIn < 11)
-                            {
-                                if (Items[i].Quality < 50)
-                                {
-                                    Items[i].Quality = Items[i].Quality + 1;
-                                }
-                            }
+	public interface IProduct
+	{
+		void Update(Item item);
+	}
 
-                            if (Items[i].SellIn < 6)
-                            {
-                                if (Items[i].Quality < 50)
-                                {
-                                    Items[i].Quality = Items[i].Quality + 1;
-                                }
-                            }
-                        }
-                    }
-                }
+	public class Product : IProduct
+	{
+		private readonly IAdjustQuality _qualityAdjuster;
 
-                if (Items[i].Name != "Sulfuras, Hand of Ragnaros")
-                {
-                    Items[i].SellIn = Items[i].SellIn - 1;
-                }
+		public Product(IAdjustQuality qualityAdjuster)
+		{
+			_qualityAdjuster = qualityAdjuster;
+		}
 
-                if (Items[i].SellIn < 0)
-                {
-                    if (Items[i].Name != "Aged Brie")
-                    {
-                        if (Items[i].Name != "Backstage passes to a TAFKAL80ETC concert")
-                        {
-                            if (Items[i].Quality > 0)
-                            {
-                                if (Items[i].Name != "Sulfuras, Hand of Ragnaros")
-                                {
-                                    Items[i].Quality = Items[i].Quality - 1;
-                                }
-                            }
-                        }
-                        else
-                        {
-                            Items[i].Quality = Items[i].Quality - Items[i].Quality;
-                        }
-                    }
-                    else
-                    {
-                        if (Items[i].Quality < 50)
-                        {
-                            Items[i].Quality = Items[i].Quality + 1;
-                        }
-                    }
-                }
-            }
-        }
-    }
+		public void Update(Item item)
+		{
+			item.SellIn = item.SellIn - 1;
+			item.Quality = item.Quality + (_qualityAdjuster.Adjust(item));
+
+			item.Quality = Math.Min(50, item.Quality);
+			item.Quality = Math.Max(0, item.Quality);
+		}
+	}
+
+	public class SulfurasProduct : IProduct
+	{
+		public void Update(Item item)
+		{
+		}
+	}
+
+	public interface IAdjustQuality
+	{
+		int Adjust(Item item);
+	}
+
+	public class QualityAdjuster : IAdjustQuality
+	{
+		private readonly int _defaultQuality;
+
+		public QualityAdjuster(int defaultQuality)
+		{
+			_defaultQuality = defaultQuality;
+		}
+
+		public int Adjust(Item item)
+		{
+			return item.SellIn < 0 ? 2 * _defaultQuality : _defaultQuality;
+		}
+	}
+
+	public class BackstageQualityAdjuster : IAdjustQuality
+	{
+		private readonly int _defaultQuality;
+
+		public BackstageQualityAdjuster(int defaultQuality)
+		{
+			_defaultQuality = defaultQuality;
+		}
+
+		public int Adjust(Item item)
+		{
+			if (item.SellIn < 0)
+				return -item.Quality;
+			if (item.SellIn < 5)
+				return +3;
+			if (item.SellIn < 10)
+				return +2;
+
+			return _defaultQuality;
+		}
+	}
 }

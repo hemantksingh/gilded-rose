@@ -44,11 +44,10 @@ namespace gilded_rose
                     SellIn = 5,
                     Quality = 49
                 },
-				// this conjured item does not work properly yet
 				new Item {Name = "Conjured Mana Cake", SellIn = 3, Quality = 6}
 			};
 
-			new GildedRose(items).UpdateQuality();
+			new GildedRose().UpdateQuality(items);
 
 			var builder = new StringBuilder();
 			builder.AppendLine("name, sellIn, quality");
