@@ -47,12 +47,19 @@ namespace gilded_rose
 				new Item {Name = "Conjured Mana Cake", SellIn = 3, Quality = 6}
 			};
 
-			new GildedRose().UpdateQuality(items);
-
 			var builder = new StringBuilder();
-			builder.AppendLine("name, sellIn, quality");
+            builder.AppendLine("OMGHAI!");
 
-			items.ForEach(item => builder.AppendLine($"{item.Name}, {item.SellIn}, {item.Quality}"));
+            for (int i= 0; i <= 30; i++) {
+                builder.AppendLine($"-------- day {i} --------");
+                builder.AppendLine("name, sellIn, quality");
+                items.ForEach(item => builder.AppendLine($"{item.Name}, {item.SellIn}, {item.Quality}"));
+                builder.AppendLine();
+
+                new GildedRose().UpdateQuality(items);
+            }
+
+            builder.Length = builder.Length -1;
 
 			sendOutput(builder.ToString());
 		}
