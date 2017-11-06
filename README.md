@@ -1,4 +1,17 @@
 
+## Requirements
+* dotnet core `choco install dotnetcore-sdk -v`
+* GNU Make `choco install make -v`
+
+## Build
+`make build`
+
+## Run
+`make run`
+
+## Test
+`make test`
+
 # Gilded Rose Requirements 
 
 
